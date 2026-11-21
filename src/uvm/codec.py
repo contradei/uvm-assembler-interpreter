@@ -1,0 +1,32 @@
+"""Encode variable-length UVM instructions in little-endian byte order."""
+
+from .spec import check_unsigned, instructions, opcode_bits
+
+
+by_opcode = {item[0]: item for item in instructions.values()}
+
+
+def encode_instruction(fields):
+    """Pack validated A/B/C fields with zero-filled unused high bits."""
+    opcode = fields.get('a')
+    if type(opcode) is not int or opcode not in by_opcode:
+        raise ValueError(f'unknown opcode: {opcode}')
+    _, size, operands, widths = by_opcode[opcode]
+    names = ('b', 'c')[:len(operands)]
+    if set(fields) != {'a', *names}:
+        raise ValueError('incorrect intermediate fields')
+    value, offset = opcode, opcode_bits
+    for name, width in zip(names, widths):
+        value |= check_unsigned(fields[name], width, name) << offset
+        offset += width
+    return value.to_bytes(size, 'little')
+
+
+def encode_program(program):
+    """Translate every instruction before any output file is changed."""
+    return [encode_instruction(fields) for fields in program]
+
+
+def format_bytes(data):
+    """Format an instruction like the hexadecimal tests in the PDF."""
+    return ', '.join(f'0x{byte:02X}' for byte in data)

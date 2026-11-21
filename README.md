@@ -1,7 +1,7 @@
 # Ассемблер и интерпретатор УВМ — вариант 9
 
 Конфигурационное управление. Практическая работа 3, ИКБО-22-25.
-Этап 1: Промежуточное представление.
+Этап 2: Машинный код.
 Основание: методичка, страницы 40–43; общие требования — страницы 4–7.
 
 ## Подготовка
@@ -64,15 +64,22 @@ Linux/macOS: вместо `.\run.bat` используйте `python3 -m src.uvm
 Успех — код 0. Ошибки идут в stderr. Исходный файл нельзя использовать как выходной.
 Пустая программа [] допустима; неизвестные операции и неверные операнды запрещены.
 
-На этапе 1 двоичный файл ещё не создаётся. Без --test-mode программа только проверяется.
-В тестовом режиме выводится промежуточное представление:
+Начиная с этапа 2 создаётся бинарный файл и выводится число команд.
+В --test-mode печатаются байты каждой команды, а не промежуточные поля этапа 1:
 
 ```text
-A=12, B=443
-A=1, B=720
-A=2, B=558
-A=25, B=724, C=643
+Instructions: 4
+0x6C, 0x37, 0x00, 0x00, 0x00
+0x01, 0x5A, 0x00, 0x00
+0xC2, 0x45, 0x00, 0x00
+0x99, 0x5A, 0x00, 0x0C, 0x0A, 0x00
 ```
+
+Порядок байтов little-endian следует из примеров спецификации.
+A занимает биты 0–4; B начинается с бита 5; C в not — с бита 26.
+Неиспользуемые старшие биты равны нулю. Заголовков и разделителей между командами нет.
+Папки результата создаются автоматически. Файл заменяется только после успешной трансляции.
+Бинарные файлы и дампы generated не входят в Git.
 
 ## Описание функций
 
@@ -81,9 +88,19 @@ A=25, B=724, C=643
 - `different_paths`: Prevent output from overwriting the input, including hard links.
 - `parse_args`: Parse the assembler source, binary destination and test mode.
 
+### codec.py
+
+- `encode_instruction`: Pack validated A/B/C fields with zero-filled unused high bits.
+- `encode_program`: Translate every instruction before any output file is changed.
+- `format_bytes`: Format an instruction like the hexadecimal tests in the PDF.
+
+### files.py
+
+- `atomic_write`: Write beside the destination and atomically replace it on success.
+
 ### main.py
 
-- `assemble`: Parse all instructions; show fields only when test mode is enabled.
+- `assemble`: Write the machine code, report count and optionally print each byte.
 - `main`: Return code 1 for processing errors and leave argparse code 2 intact.
 
 ### parser.py

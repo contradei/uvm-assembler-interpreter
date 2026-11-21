@@ -1,4 +1,4 @@
-"""Stage 1 entry point: JSON to intermediate instruction fields."""
+"""Stage 2 entry point: JSON assembly to binary machine code."""
 
 from pathlib import Path
 import sys
@@ -8,15 +8,20 @@ if __package__ in (None, ''):
     __package__ = 'src.uvm'
 
 from .cli import parse_args
-from .parser import format_fields, read_program
+from .codec import encode_program, format_bytes
+from .files import atomic_write
+from .parser import read_program
 
 
 def assemble(args):
-    """Parse all instructions; show fields only when test mode is enabled."""
+    """Write the machine code, report count and optionally print each byte."""
     program = read_program(args.source)
+    chunks = encode_program(program)
+    atomic_write(args.output, b''.join(chunks))
+    print(f'Instructions: {len(chunks)}')
     if args.test_mode:
-        for fields in program:
-            print(format_fields(fields))
+        for chunk in chunks:
+            print(format_bytes(chunk))
 
 
 def main(argv=None):
