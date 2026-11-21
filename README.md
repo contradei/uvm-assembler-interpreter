@@ -1,7 +1,7 @@
 # Ассемблер и интерпретатор УВМ — вариант 9
 
 Конфигурационное управление. Практическая работа 3, ИКБО-22-25.
-Этап 4: Побитовое НЕ.
+Этап 5: Вектор длины 5.
 Основание: методичка, страницы 40–43; общие требования — страницы 4–7.
 
 ## Подготовка
@@ -127,6 +127,29 @@ Get-Content generated/not.xml
 
 Исходные ячейки 0..3: [0, 4294967295, 2147483648, 2863311530].
 Результаты в ячейках 10..13: [4294967295, 0, 2147483647, 1431655765].
+
+## Задача: НЕ над вектором длины 5
+
+Каждый пример содержит инициализацию пяти ячеек 100..104 и пять команд not
+с совпадающими source/destination. Результат заменяет исходный вектор.
+Итого 15 команд и 75 байт в каждой программе.
+
+```powershell
+.\run.bat assemble --source examples/vector_1.json --output generated/vector_1.bin
+.\run.bat interpret --binary generated/vector_1.bin --dump generated/vector_1.xml --start 100 --end 104
+Get-Content generated/vector_1.xml
+.\run.bat assemble --source examples/vector_2.json --output generated/vector_2.bin
+.\run.bat interpret --binary generated/vector_2.bin --dump generated/vector_2.xml --start 100 --end 104
+Get-Content generated/vector_2.xml
+.\run.bat assemble --source examples/vector_3.json --output generated/vector_3.bin
+.\run.bat interpret --binary generated/vector_3.bin --dump generated/vector_3.xml --start 100 --end 104
+Get-Content generated/vector_3.xml
+```
+
+Данные и ожидаемые результаты перечислены в examples/vectors_expected.json.
+tests/test_vectors.py собирает и исполняет все три JSON-программы и сравнивает
+XML-дампы с независимыми ожидаемыми значениями, а также проверяет длину вектора
+и сохранность ячеек за его границами.
 
 ## Описание функций
 
