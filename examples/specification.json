@@ -1,0 +1,6 @@
+[
+  {"op": "load_const", "value": 443},
+  {"op": "read", "address": 720},
+  {"op": "write", "address": 558},
+  {"op": "not", "destination": 724, "source": 643}
+]
