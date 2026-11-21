@@ -1,0 +1,14 @@
+[
+  {"op": "load_const", "value": 0},
+  {"op": "write", "address": 0},
+  {"op": "load_const", "value": 4294967295},
+  {"op": "write", "address": 1},
+  {"op": "load_const", "value": 2147483648},
+  {"op": "write", "address": 2},
+  {"op": "load_const", "value": 2863311530},
+  {"op": "write", "address": 3},
+  {"op": "not", "destination": 10, "source": 0},
+  {"op": "not", "destination": 11, "source": 1},
+  {"op": "not", "destination": 12, "source": 2},
+  {"op": "not", "destination": 13, "source": 3}
+]

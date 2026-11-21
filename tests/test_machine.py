@@ -75,8 +75,8 @@ class MachineTests(unittest.TestCase):
         self.assertEqual(machine.run().read(0), 443)
         self.assertEqual(machine.code, code)
 
-    def test_not_unavailable(self):
-        """Stage 3 explicitly rejects the still-unimplemented ALU operation."""
+    def test_not_available(self):
+        """Stage 4 complements the source into the destination."""
         machine = Machine(bytes.fromhex('995a000c0a00'))
-        with self.assertRaisesRegex(ValueError, 'stage 4'):
-            machine.run()
+        machine.memory.write(643, 0)
+        self.assertEqual(machine.run().read(724), 4294967295)

@@ -1,4 +1,4 @@
-"""Stage 3: assemble JSON or interpret the basic memory instructions."""
+"""Stage 4: assemble and execute all variant 9 machine instructions."""
 
 from pathlib import Path
 import sys

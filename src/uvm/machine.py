@@ -1,7 +1,7 @@
 """Separate immutable instruction bytes from sparse 32-bit data memory."""
 
 from .codec import decode_instruction
-from .spec import address_bits, check_unsigned, word_bits
+from .spec import address_bits, check_unsigned, word_bits, word_mask
 
 
 class Memory:
@@ -35,11 +35,12 @@ class Machine:
         self.executed = 0
 
     def execute(self, fields):
-        """Dispatch basic memory operations; NOT is reserved for stage 4."""
-        handlers = {12: self.load_constant, 1: self.read, 2: self.write}
+        """Dispatch memory operations and the bitwise NOT instruction."""
+        handlers = {12: self.load_constant, 1: self.read, 2: self.write,
+                    25: self.bitwise_not}
         handler = handlers.get(fields['a'])
         if handler is None:
-            raise ValueError('NOT execution is available starting at stage 4')
+            raise ValueError(f'unsupported opcode: {fields["a"]}')
         handler(fields)
 
     def load_constant(self, fields):
@@ -53,6 +54,11 @@ class Machine:
     def write(self, fields):
         """Copy the accumulator into data memory at B."""
         self.memory.write(fields['b'], self.accumulator)
+
+    def bitwise_not(self, fields):
+        """Invert the word at C into B without changing the accumulator."""
+        result = (~self.memory.read(fields['c'])) & word_mask
+        self.memory.write(fields['b'], result)
 
     def run(self):
         """Read, decode and execute complete instructions in byte order."""

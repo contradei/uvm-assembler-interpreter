@@ -1,7 +1,7 @@
 # Ассемблер и интерпретатор УВМ — вариант 9
 
 Конфигурационное управление. Практическая работа 3, ИКБО-22-25.
-Этап 3: Интерпретатор и память.
+Этап 4: Побитовое НЕ.
 Основание: методичка, страницы 40–43; общие требования — страницы 4–7.
 
 ## Подготовка
@@ -113,7 +113,20 @@ copy_array.json сначала записывает [7, 0, 4294967295] по ад
 Дамп содержит исходный и скопированный массивы; остальные ячейки равны 0.
 XML имеет корень memory с атрибутами start/end; элементы cell — address/value.
 
-Команда not ассемблируется, но её выполнение на этапе 3 явно запрещено.
+## Побитовое НЕ
+
+Команда not вычисляет memory[destination] = (~memory[source]) & 0xFFFFFFFF.
+Аккумулятор не меняется. Совпадение адресов допустимо.
+Проверяются ноль, максимальное слово, старший бит и чередующиеся биты.
+
+```powershell
+.\run.bat assemble --source examples/not_cases.json --output generated/not.bin
+.\run.bat interpret --binary generated/not.bin --dump generated/not.xml --start 0 --end 13
+Get-Content generated/not.xml
+```
+
+Исходные ячейки 0..3: [0, 4294967295, 2147483648, 2863311530].
+Результаты в ячейках 10..13: [4294967295, 0, 2147483647, 1431655765].
 
 ## Описание функций
 
@@ -147,10 +160,11 @@ XML имеет корень memory с атрибутами start/end; элеме
 - `read`: Read a valid address without allocating unwritten cells.
 - `write`: Store a word after validating both the address and its value.
 - `__init__`: Initialize a zero accumulator and independent data memory.
-- `execute`: Dispatch basic memory operations; NOT is reserved for stage 4.
+- `execute`: Dispatch memory operations and the bitwise NOT instruction.
 - `load_constant`: Copy B into the accumulator.
 - `read`: Copy data memory at B into the accumulator.
 - `write`: Copy the accumulator into data memory at B.
+- `bitwise_not`: Invert the word at C into B without changing the accumulator.
 - `run`: Read, decode and execute complete instructions in byte order.
 
 ### main.py
