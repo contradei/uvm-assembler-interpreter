@@ -1,0 +1,14 @@
+[
+  {"op": "load_const", "value": 7},
+  {"op": "write", "address": 10},
+  {"op": "load_const", "value": 0},
+  {"op": "write", "address": 11},
+  {"op": "load_const", "value": 4294967295},
+  {"op": "write", "address": 12},
+  {"op": "read", "address": 10},
+  {"op": "write", "address": 20},
+  {"op": "read", "address": 11},
+  {"op": "write", "address": 21},
+  {"op": "read", "address": 12},
+  {"op": "write", "address": 22}
+]

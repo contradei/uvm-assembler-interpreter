@@ -1,7 +1,7 @@
 # Ассемблер и интерпретатор УВМ — вариант 9
 
 Конфигурационное управление. Практическая работа 3, ИКБО-22-25.
-Этап 2: Машинный код.
+Этап 3: Интерпретатор и память.
 Основание: методичка, страницы 40–43; общие требования — страницы 4–7.
 
 ## Подготовка
@@ -81,27 +81,83 @@ A занимает биты 0–4; B начинается с бита 5; C в no
 Папки результата создаются автоматически. Файл заменяется только после успешной трансляции.
 Бинарные файлы и дампы generated не входят в Git.
 
+## Интерпретатор
+
+```powershell
+.\run.bat assemble --source examples/copy_array.json --output generated/copy.bin
+.\run.bat interpret --binary generated/copy.bin --dump generated/copy.xml --start 10 --end 22
+Get-Content generated/copy.xml
+```
+
+| Параметр | Назначение |
+| --- | --- |
+| interpret | Подкоманда выполнения |
+| --binary | Обязательный путь к бинарной программе |
+| --dump | Обязательный путь к выходному XML |
+| --start | Первый адрес дампа (включительно) |
+| --end | Последний адрес дампа (включительно), не меньше start |
+
+Память команд — неизменяемые байты; память данных — отдельный разреженный словарь.
+Адресное пространство содержит 2^21 ячеек; неприсвоенные ячейки равны 0.
+Аккумулятор изначально равен 0. load_const и read изменяют аккумулятор;
+write сохраняет его в указанную ячейку. Исполнение завершается на конце файла.
+Обрезанная команда, неизвестный opcode и ненулевые резервные биты дают ошибку.
+При ошибке выполнения прежний XML-дамп сохраняется.
+
+В методичке не указаны знаковость памяти и ширина результата НЕ.
+Здесь явно принята модель беззнаковых 32-битных слов, согласованная с размером константы.
+Это выбранное соглашение реализации, а не дополнительное условие методички.
+
+copy_array.json сначала записывает [7, 0, 4294967295] по адресам 10..12,
+затем копирует их командами read/write по адресам 20..22.
+Дамп содержит исходный и скопированный массивы; остальные ячейки равны 0.
+XML имеет корень memory с атрибутами start/end; элементы cell — address/value.
+
+Команда not ассемблируется, но её выполнение на этапе 3 явно запрещено.
+
 ## Описание функций
 
 ### cli.py
 
 - `different_paths`: Prevent output from overwriting the input, including hard links.
-- `parse_args`: Parse the assembler source, binary destination and test mode.
+- `add_assembler`: Describe the source, binary output and diagnostic flag.
+- `add_interpreter`: Describe the binary input and inclusive XML dump range.
+- `validate_paths`: Validate subcommand-specific paths and dump endpoints.
+- `parse_args`: Return validated options, reporting argument errors with code 2.
 
 ### codec.py
 
 - `encode_instruction`: Pack validated A/B/C fields with zero-filled unused high bits.
 - `encode_program`: Translate every instruction before any output file is changed.
 - `format_bytes`: Format an instruction like the hexadecimal tests in the PDF.
+- `decode_instruction`: Decode one instruction and reject truncation, opcodes and padding.
+
+### dump.py
+
+- `validate_range`: Require ordered inclusive endpoints in the 21-bit address space.
+- `memory_xml`: Include each requested cell, including zeros, with explicit addresses.
 
 ### files.py
 
 - `atomic_write`: Write beside the destination and atomically replace it on success.
 
+### machine.py
+
+- `__init__`: Start with no assigned cells.
+- `read`: Read a valid address without allocating unwritten cells.
+- `write`: Store a word after validating both the address and its value.
+- `__init__`: Initialize a zero accumulator and independent data memory.
+- `execute`: Dispatch basic memory operations; NOT is reserved for stage 4.
+- `load_constant`: Copy B into the accumulator.
+- `read`: Copy data memory at B into the accumulator.
+- `write`: Copy the accumulator into data memory at B.
+- `run`: Read, decode and execute complete instructions in byte order.
+
 ### main.py
 
 - `assemble`: Write the machine code, report count and optionally print each byte.
 - `main`: Return code 1 for processing errors and leave argparse code 2 intact.
+- `interpret`: Run a binary program and publish an XML dump only after success.
 
 ### parser.py
 
